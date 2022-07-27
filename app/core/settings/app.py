@@ -12,6 +12,8 @@ from app.core.settings.base import BaseAppSettings
 class AppSettings(BaseAppSettings):
     FIRST_SUPERUSER = "admin@plough.com"
     FIRST_SUPERUSER_PASSWORD = "12345678"
+    USERS_OPEN_REGISTRATION = True
+    ACCESS_TOKEN_EXPIRE_MINUTES = 10
     debug: bool = False
     docs_url: str = "/docs"
     openapi_prefix: str = ""
