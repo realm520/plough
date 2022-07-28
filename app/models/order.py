@@ -9,9 +9,12 @@ if TYPE_CHECKING:
     from .user import User  # noqa: F401
 
 
-class Item(Base):
+class Order(Base):
     id = Column(Integer, primary_key=True, index=True)
-    title = Column(String, index=True)
-    description = Column(String, index=True)
+    order_number = Column(String, unique=True, index=True)
+    product_name = Column(String, index=True)
+    master = Column(String, index=True)
+    amount = Column(Integer)
+    pay_type = Column(String, index=True)
     owner_id = Column(Integer, ForeignKey("user.id"))
-    owner = relationship("User", back_populates="items")
+    owner = relationship("User", back_populates="orders")

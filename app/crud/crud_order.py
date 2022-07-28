@@ -1,19 +1,23 @@
 from typing import List
+import uuid
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
 
 from app.crud.base import CRUDBase
-from app.models.item import Item
-from app.schemas.item import ItemCreate, ItemUpdate
+from app.models.order import Order
+from app.schemas.order import OrderCreate, OrderUpdate
 
 
-class CRUDItem(CRUDBase[Item, ItemCreate, ItemUpdate]):
+class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
     def create_with_owner(
-        self, db: Session, *, obj_in: ItemCreate, owner_id: int
-    ) -> Item:
+        self, db: Session, *, obj_in: OrderCreate, owner_id: int
+    ) -> Order:
         obj_in_data = jsonable_encoder(obj_in)
-        db_obj = self.model(**obj_in_data, owner_id=owner_id)
+        db_obj = self.model(
+            **obj_in_data, 
+            owner_id=owner_id,
+            order_number=str(uuid.uuid4()))
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -21,14 +25,14 @@ class CRUDItem(CRUDBase[Item, ItemCreate, ItemUpdate]):
 
     def get_multi_by_owner(
         self, db: Session, *, owner_id: int, skip: int = 0, limit: int = 100
-    ) -> List[Item]:
+    ) -> List[Order]:
         return (
             db.query(self.model)
-            .filter(Item.owner_id == owner_id)
+            .filter(Order.owner_id == owner_id)
             .offset(skip)
             .limit(limit)
             .all()
         )
 
 
-item = CRUDItem(Item)
+order = CRUDOrder(Order)
