@@ -10,6 +10,7 @@ from app.api import deps
 from app.core.config import get_app_settings
 from app.core.settings.app import AppSettings
 from app.utils import send_new_account_email
+from app.bazi import BaZi
 
 router = APIRouter()
 
@@ -123,6 +124,21 @@ def create_user_open(
     user = crud.user.create(db, obj_in=user_in)
     return user
 
+@router.get("/divination", response_model=Any)
+def get_divination(
+    *,
+    db: Session = Depends(deps.get_db),
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+    current_user: models.User = Depends(deps.get_current_active_user)
+) -> Any:
+    """
+    Get divination.
+    """
+    bazi = BaZi(year, month, day, hour)
+    return bazi.get_detail()
 
 @router.get("/{user_id}", response_model=schemas.User)
 def read_user_by_id(
@@ -162,3 +178,4 @@ def update_user(
         )
     user = crud.user.update(db, db_obj=user, obj_in=user_in)
     return user
+
