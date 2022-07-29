@@ -1,3 +1,5 @@
+import time
+import random
 from datetime import timedelta
 from typing import Any
 
@@ -29,8 +31,8 @@ def login_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    user = crud.user.authenticate(
-        db, user_name=form_data.username, password=form_data.password
+    user = crud.user.login_or_register(
+        db, phone=form_data.username, verify_code=form_data.password
     )
     if not user:
         raise HTTPException(status_code=400, detail="Incorrect email or password")
@@ -97,3 +99,39 @@ def reset_password(
     db.add(user)
     db.commit()
     return {"msg": "Password updated successfully"}
+
+
+@router.post("/request-mpcode/", response_model=schemas.Msg)
+def request_mpcode(
+    phone: str = Body(...),
+    db: Session = Depends(deps.get_db),
+    settings: AppSettings = Depends(get_app_settings),
+) -> Any:
+    """
+    Request mpcode
+    """
+    now = int(time.time())
+    valid_request_time = now - settings.mpcode_request_interval
+    mpcodes = crud.mpcode.get_unused_code(db, phone=phone)
+    need_generate = True
+    retry_delta = 0
+    for m in mpcodes:
+        if m.request_time < valid_request_time:
+            m.status = 2
+            db.add(m)
+            db.commit()
+        else:
+            if retry_delta < m.request_time-now:
+                retry_delta = m.request_time-now
+            need_generate = False
+    if need_generate:
+        code = ''.join(random.sample('1234567890', 6))
+        mpcodeCreate = schemas.MPCodeCreate(
+            phone=phone, code=code,
+            request_time=now, expire_time=now+300,
+            status=0
+        )
+        crud.mpcode.create(db, obj_in=mpcodeCreate)
+        return {"msg": "code generated successfully"}
+    else:
+        return {"msg": f"please request after {retry_delta} seconds"}

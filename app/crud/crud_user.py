@@ -1,3 +1,4 @@
+import uuid
 from typing import Any, Dict, Optional, Union
 
 from sqlalchemy.orm import Session
@@ -16,12 +17,23 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_by_name(self, db: Session, *, name: str) -> Optional[User]:
         return db.query(User).filter(User.user_name == name).first()
 
+    def get_by_phone(self, db: Session, *, phone: str) -> Optional[User]:
+        return db.query(User).filter(User.phone == phone).first()
+
+    def login_or_register(self, db: Session, *, phone: str, verify_code: str) -> Optional[User]:
+        user = self.get_by_phone(db, phone=phone)
+        if not user and verify_code == "9999":
+            return self.create(db, obj_in=UserCreate(phone=phone))
+        elif verify_code == "9988":
+            return user
+        else:
+            return None
+
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         db_obj = User(
-            email=obj_in.email,
-            hashed_password=get_password_hash(obj_in.password),
-            user_name=obj_in.user_name,
-            is_superuser=obj_in.is_superuser,
+            hashed_password=get_password_hash("12345678"),
+            user_name=str(uuid.uuid4()),
+            is_superuser=False,
             phone=obj_in.phone
         )
         db.add(db_obj)
@@ -42,8 +54,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             update_data["hashed_password"] = hashed_password
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
+    # login with phone
     def authenticate(self, db: Session, *, user_name: str, password: str) -> Optional[User]:
-        user = self.get_by_name(db, name=user_name)
+        user = self.get_by_phone(db, phone=user_name)
         if not user:
             return None
         if not verify_password(password, user.hashed_password):

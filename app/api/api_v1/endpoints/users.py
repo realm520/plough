@@ -95,10 +95,10 @@ def read_user_me(
 def create_user_open(
     *,
     db: Session = Depends(deps.get_db),
+    phone: str = Body(...),
     password: str = Body(...),
-    user_name: str = Body(...),
+    user_name: str = Body(None),
     email: EmailStr = Body(None),
-    phone: str = Body(None),
     settings: AppSettings = Depends(get_app_settings)
 ) -> Any:
     """

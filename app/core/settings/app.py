@@ -14,6 +14,7 @@ class AppSettings(BaseAppSettings):
     FIRST_SUPERUSER_PASSWORD = "12345678"
     USERS_OPEN_REGISTRATION = True
     ACCESS_TOKEN_EXPIRE_MINUTES = 10
+    mpcode_request_interval = 60
     debug: bool = False
     docs_url: str = "/docs"
     openapi_prefix: str = ""

@@ -35,7 +35,7 @@ def send_email(
 
 
 def send_test_email(email_to: str) -> None:
-    project_name = settings.PROJECT_NAME
+    project_name = settings.title
     subject = f"{project_name} - Test email"
     with open(Path(settings.EMAIL_TEMPLATES_DIR) / "test_email.html") as f:
         template_str = f.read()
@@ -79,7 +79,7 @@ def send_new_account_email(email_to: str, username: str, password: str) -> None:
         subject_template=subject,
         html_template=template_str,
         environment={
-            "project_name": settings.PROJECT_NAME,
+            "project_name": settings.title,
             "username": username,
             "password": password,
             "email": email_to,
@@ -94,14 +94,14 @@ def generate_password_reset_token(email: str) -> str:
     expires = now + delta
     exp = expires.timestamp()
     encoded_jwt = jwt.encode(
-        {"exp": exp, "nbf": now, "sub": email}, settings.SECRET_KEY, algorithm="HS256",
+        {"exp": exp, "nbf": now, "sub": email}, settings.secret_key, algorithm="HS256",
     )
     return encoded_jwt
 
 
 def verify_password_reset_token(token: str) -> Optional[str]:
     try:
-        decoded_token = jwt.decode(token, settings.SECRET_KEY, algorithms=["HS256"])
+        decoded_token = jwt.decode(token, settings.secret_key, algorithms=["HS256"])
         return decoded_token["email"]
     except jwt.JWTError:
         return None
