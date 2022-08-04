@@ -17,6 +17,7 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
         db_obj = self.model(
             **obj_in_data, 
             owner_id=owner_id,
+            status=0,
             order_number=str(uuid.uuid4()))
         db.add(db_obj)
         db.commit()

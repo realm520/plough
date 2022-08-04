@@ -13,6 +13,7 @@ class AppSettings(BaseAppSettings):
     FIRST_SUPERUSER = "admin@plough.com"
     FIRST_SUPERUSER_PASSWORD = "12345678"
     USERS_OPEN_REGISTRATION = True
+    MASTERS_OPEN_REGISTRATION = True
     ACCESS_TOKEN_EXPIRE_MINUTES = 10
     mpcode_request_interval = 60
     debug: bool = False
@@ -35,7 +36,7 @@ class AppSettings(BaseAppSettings):
 
     allowed_hosts: List[str] = ["*"]
 
-    logging_level: int = logging.INFO
+    logging_level: int = logging.DEBUG
     loggers: Tuple[str, str] = ("uvicorn.asgi", "uvicorn.access")
 
     class Config:

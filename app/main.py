@@ -25,15 +25,6 @@ def get_application() -> FastAPI:
             allow_headers=["*"],
         )
     application.include_router(api_router, prefix=settings.api_prefix)
-    #application.include_router(users.router)
-    #application.include_router(items.router)
-    #application.include_router(
-        ##admin.router,
-        #prefix="/admin",
-        #tags=["admin"],
-        #dependencies=[Depends(get_token_header)],
-        #responses={418: {"description": "I'm a teapot"}},
-    #)
     return application
 
 app = get_application()

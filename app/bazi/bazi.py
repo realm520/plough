@@ -44,6 +44,7 @@ class BaZi():
             'gans': ' '.join(list(gans)),
             'zhis': ' '.join(list(zhis))
         }
+        # 十神
         me = datas.Gan[dGZ.tg]
         gan_shens = []
         for seq, item in enumerate(gans):    
@@ -59,4 +60,17 @@ class BaZi():
             'gan': gan_shens,
             'zhi': zhi_shens
         }
+        # 计算八字强弱, 子平真诠的计算
+        weak = True
+        me_status = []
+        shens = gan_shens + zhi_shens
+        for item in zhis:
+            me_status.append(datas.ten_deities[me][item])
+            if datas.ten_deities[me][item] in ('长', '帝', '建'):
+                weak = False
+                break
+        if weak and shens.count('比') + me_status.count('库') >2:
+            weak = False
+        detail['weak'] = weak
+
         return detail

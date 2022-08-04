@@ -7,9 +7,9 @@ from pydantic import BaseModel
 class OrderBase(BaseModel):
     product_name: str
     master: Optional[str] = None
+    master_id: Optional[int] = None
     amount: Optional[int] = 0
     pay_type: Optional[str] = None
-
 
 # Properties to receive on item creation
 class OrderCreate(OrderBase):
@@ -18,7 +18,7 @@ class OrderCreate(OrderBase):
 
 # Properties to receive on item update
 class OrderUpdate(OrderBase):
-    pass
+    status: Optional[int] = 0
 
 
 # Properties shared by models stored in DB
@@ -26,6 +26,7 @@ class OrderInDBBase(OrderBase):
     id: int
     order_number: str
     owner_id: int
+    status: Optional[int] = 0
 
     class Config:
         orm_mode = True

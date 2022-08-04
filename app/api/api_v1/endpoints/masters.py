@@ -1,0 +1,170 @@
+from typing import Any, List
+
+from fastapi import APIRouter, Body, Depends, HTTPException
+from fastapi.encoders import jsonable_encoder
+from pydantic.networks import EmailStr
+from sqlalchemy.orm import Session
+
+from app import crud, models, schemas
+from app.api import deps
+from app.core.config import get_app_settings
+from app.core.settings.app import AppSettings
+from app.bazi import BaZi
+
+router = APIRouter()
+
+
+@router.get("/", response_model=List[schemas.Master])
+def read_masters(
+    db: Session = Depends(deps.get_db),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
+    Retrieve masters. (superuser only)
+    """
+    users = crud.user.get_multi(db, skip=skip, limit=limit)
+    return users
+
+
+@router.post("/", response_model=schemas.Master)
+def create_master(
+    *,
+    db: Session = Depends(deps.get_db),
+    obj_in: schemas.MasterCreate,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    settings: AppSettings = Depends(get_app_settings)
+) -> Any:
+    """
+    Create new master. (superuser only)
+    """
+    master = crud.master.get_by_phone(db, phone=obj_in.phone)
+    if master:
+        raise HTTPException(
+            status_code=400,
+            detail="The master with this phone already exists in the system.",
+        )
+    master = crud.master.create(db, obj_in=obj_in)
+    return master
+
+
+@router.put("/me", response_model=schemas.Master)
+def update_master_me(
+    *,
+    db: Session = Depends(deps.get_db),
+    password: str = Body(None),
+    name: str = Body(None),
+    phone: str = Body(None),
+    current_master: models.Master = Depends(deps.get_current_active_master),
+) -> Any:
+    """
+    Update own master.
+    """
+    current_data = jsonable_encoder(current_master)
+    data_in = schemas.MasterUpdate(**current_data)
+    if password is not None:
+        data_in.password = password
+    if phone is not None:
+        data_in.phone = phone
+    if name is not None:
+        data_in.name = name
+    master = crud.master.update(db, db_obj=current_master, obj_in=data_in)
+    return master
+
+
+@router.get("/me", response_model=schemas.Master)
+def read_master_me(
+    db: Session = Depends(deps.get_db),
+    current_master: models.Master = Depends(deps.get_current_active_master),
+) -> Any:
+    """
+    Get current master.
+    """
+    return current_master
+
+
+@router.post("/open", response_model=schemas.Master)
+def create_master_open(
+    *,
+    db: Session = Depends(deps.get_db),
+    phone: str = Body(...),
+    password: str = Body(...),
+    name: str = Body(None),
+    settings: AppSettings = Depends(get_app_settings)
+) -> Any:
+    """
+    Create new master without the need to be logged in.
+    """
+    if not settings.MASTERS_OPEN_REGISTRATION:
+        raise HTTPException(
+            status_code=403,
+            detail="Open master registration is forbidden on this server",
+        )
+    master = crud.master.get_by_phone(db, phone=phone)
+    if master:
+        raise HTTPException(
+            status_code=400,
+            detail="The master with this phone already exists in the system",
+        )
+    data_in = schemas.MasterRegister(
+        password=password, 
+        name=name,
+        phone=phone)
+    master = crud.master.register(db, obj_in=data_in)
+    return master
+
+@router.get("/divination", response_model=Any)
+def get_divination(
+    *,
+    db: Session = Depends(deps.get_db),
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+    current_user: models.User = Depends(deps.get_current_active_user)
+) -> Any:
+    """
+    Get divination.
+    """
+    bazi = BaZi(year, month, day, hour)
+    return bazi.get_detail()
+
+@router.get("/{master_id}", response_model=schemas.Master)
+def read_master_by_id(
+    master_id: int,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Get a specific master by id.
+    """
+    master = crud.master.get(db, id=master_id)
+    if not master:
+        raise HTTPException(
+            status_code=404,
+            detail="The master with this phone does not exist in the system",
+        )
+    return master
+
+
+@router.put("/{master_id}", response_model=schemas.Master)
+def update_master(
+    *,
+    db: Session = Depends(deps.get_db),
+    master_id: int,
+    obj_in: schemas.MasterUpdate,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
+    Update a master. (superuser only)
+    """
+    master = crud.master.get(db, id=master_id)
+    if not master:
+        raise HTTPException(
+            status_code=404,
+            detail="The master with this phone does not exist in the system",
+        )
+    master = crud.master.update(db, db_obj=master, obj_in=obj_in)
+    return master
+

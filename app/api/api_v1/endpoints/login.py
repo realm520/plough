@@ -31,17 +31,30 @@ def login_access_token(
     """
     OAuth2 compatible token login, get an access token for future requests
     """
-    user = crud.user.login_or_register(
-        db, phone=form_data.username, verify_code=form_data.password
-    )
-    if not user:
-        raise HTTPException(status_code=400, detail="Incorrect email or password")
-    elif not crud.user.is_active(user):
-        raise HTTPException(status_code=400, detail="Inactive user")
+    entity = None
+    if "master" in form_data.scopes:
+        master = crud.master.login_or_register(
+            db, phone=form_data.username, verify_code=form_data.password
+        )
+        if not master:
+            raise HTTPException(status_code=400, detail="Incorrect username or password")
+        elif not crud.master.is_active(master):
+            raise HTTPException(status_code=400, detail="Inactive master")
+        entity = master
+    else:
+        user = crud.user.login_or_register(
+            db, phone=form_data.username, verify_code=form_data.password
+        )
+        if not user:
+            raise HTTPException(status_code=400, detail="Incorrect username or password")
+        elif not crud.user.is_active(user):
+            raise HTTPException(status_code=400, detail="Inactive user")
+        entity = user
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     return {
         "access_token": security.create_access_token(
-            user.id, expires_delta=access_token_expires
+            data={"sub": str(entity.id), "scopes": form_data.scopes},
+            expires_delta=access_token_expires
         ),
         "token_type": "bearer",
     }

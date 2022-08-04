@@ -23,10 +23,22 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         user = self.get_by_phone(db, phone=phone)
         if not user and verify_code == "9999":
             return self.create(db, obj_in=UserCreate(phone=phone))
-        elif verify_code == "9988":
+        elif verify_code == "9988" or verify_password(verify_code, user.hashed_password):
             return user
         else:
             return None
+
+    def create_superuser(self, db: Session, *, obj_in: UserCreate) -> User:
+        db_obj = User(
+            hashed_password=get_password_hash("12345678"),
+            user_name=str(uuid.uuid4()),
+            is_superuser=True,
+            phone=obj_in.phone
+        )
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
         db_obj = User(
