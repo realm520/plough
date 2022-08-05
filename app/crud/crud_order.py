@@ -15,7 +15,6 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
         self, db: Session, *, obj_in: OrderCreate, owner_id: int
     ) -> Order:
         obj_in_data = jsonable_encoder(obj_in)
-        print(obj_in_data)
         db_obj = self.model(
             **obj_in_data, 
             owner_id=owner_id,

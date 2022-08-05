@@ -27,7 +27,7 @@ wxpay = WeChatPay(
     appid=settings.APPID,
     notify_url=settings.NOTIFY_URL,
     cert_dir=settings.CERT_DIR,
-    logger=logging.getLogger("demo"),
+    logger=logging.getLogger(__name__),
     partner_mode=settings.PARTNER_MODE,
     proxy=None)
 

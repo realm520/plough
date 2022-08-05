@@ -13,6 +13,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         return db.query(User).filter(User.email == email).first()
 
+    # def get_multi_user(
+    #     self, db: Session, *, skip: int = 0, limit: int = 100
+    # ) -> List[User]:
+    #     return db.query(User).filter(User.is_superuser=False).offset(skip).limit(limit).all()
+
+    # def get_multi_admin(
+    #     self, db: Session, *, skip: int = 0, limit: int = 100
+    # ) -> List[User]:
+    #     return db.query(User).filter(User.is_superuser=False).offset(skip).limit(limit).all()
+
     def get_by_name(self, db: Session, *, name: str) -> Optional[User]:
         return db.query(User).filter(User.user_name == name).first()
 
@@ -32,8 +42,10 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         db_obj = User(
             hashed_password=get_password_hash("12345678"),
             user_name=str(uuid.uuid4()),
+            full_name="",
             is_superuser=True,
-            phone=obj_in.phone
+            phone=obj_in.phone,
+            is_active=True
         )
         db.add(db_obj)
         db.commit()
