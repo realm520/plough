@@ -1,4 +1,5 @@
-import uuid
+from random import sample
+from string import ascii_letters, digits
 from typing import Any, Dict, Optional, Union
 
 from sqlalchemy.orm import Session
@@ -28,9 +29,10 @@ class CRUDMaster(CRUDBase[Master, MasterCreate, MasterUpdate]):
     def create(self, db: Session, *, obj_in: MasterCreate) -> Master:
         db_obj = Master(
             hashed_password=get_password_hash("12345678"),
-            name=str(uuid.uuid4()),
+            name=''.join(sample(ascii_letters + digits, 12)),
             rate=40,
-            phone=obj_in.phone
+            phone=obj_in.phone,
+            status=0
         )
         db.add(db_obj)
         db.commit()

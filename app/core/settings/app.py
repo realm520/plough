@@ -10,6 +10,15 @@ from app.core.settings.base import BaseAppSettings
 
 
 class AppSettings(BaseAppSettings):
+    MCHID=''
+    PRIVATE_KEY=''
+    CERT_SERIAL_NO=''
+    APIV3_KEY=''
+    APPID=''
+    NOTIFY_URL='https://www.xxxx.com/notify'
+    CERT_DIR='./cert'
+    PARTNER_MODE=False
+
     FIRST_SUPERUSER = "admin@plough.com"
     FIRST_SUPERUSER_PASSWORD = "12345678"
     USERS_OPEN_REGISTRATION = True

@@ -1,12 +1,21 @@
+import logging
+import json
+import time
+from random import sample
+from string import ascii_letters, digits
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
 from sqlalchemy.orm import Session
+from wechatpayv3 import WeChatPay, WeChatPayType
 
 from app import crud, models, schemas
 from app.api import deps
+from app.core.config import get_app_settings
+from app.core.settings.app import AppSettings
 
 router = APIRouter()
+
 
 
 @router.get("/", response_model=List[schemas.Order])
@@ -28,18 +37,58 @@ def read_orders(
     return orders
 
 
-@router.post("/", response_model=schemas.Order)
+@router.post("/")
 def create_order(
     *,
     db: Session = Depends(deps.get_db),
     order_in: schemas.OrderCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
+    settings: AppSettings = Depends(get_app_settings)
 ) -> Any:
     """
     Create new order.
     """
     order = crud.order.create_with_owner(db=db, obj_in=order_in, owner_id=current_user.id)
-    return order
+    with open(settings.PRIVATE_KEY, "r") as f:
+        pkey = f.read()
+    wxpay = WeChatPay(
+        wechatpay_type=WeChatPayType.APP,
+        mchid=settings.MCHID,
+        private_key=pkey,
+        cert_serial_no=settings.CERT_SERIAL_NO,
+        apiv3_key=settings.APIV3_KEY,
+        appid=settings.APPID,
+        notify_url=settings.NOTIFY_URL,
+        cert_dir=settings.CERT_DIR,
+        logger=None,
+        partner_mode=settings.PARTNER_MODE,
+        proxy=None)
+
+    code, message = wxpay.pay(
+        description=order.product_name,
+        out_trade_no=order.order_number,
+        amount={'total': order.amount}
+    )
+    result = json.loads(message)
+    if code in range(200, 300):
+        prepay_id = result.get('prepay_id')
+        timestamp = int(time.time())
+        noncestr = ''.join(sample(ascii_letters + digits, 8))
+        package = 'Sign=WXPay'
+        paysign = wxpay.sign([settings.APPID, str(timestamp), noncestr, prepay_id])
+        return {'code': 0, 'result': {
+            'appid': settings.APPID,
+            'partnerid': settings.MCHID,
+            'prepayid': prepay_id,
+            'package': package,
+            'nonceStr': noncestr,
+            'timestamp': timestamp,
+            'sign': paysign
+        }}
+    else:
+        return {'code': -1, 'result': {'reason': result.get('code')}}
+
+    # return order
 
 
 @router.put("/{id}", response_model=schemas.Order)
@@ -93,7 +142,7 @@ def delete_order(
     order = crud.order.get(db=db, id=id)
     if not order:
         raise HTTPException(status_code=404, detail="Order not found")
-    if not crud.user.is_superuser(current_user) and (order.owner_id != current_user.id):
+    if not crud.user.is_superuser(current_user): #and (order.owner_id != current_user.id)
         raise HTTPException(status_code=400, detail="Not enough permissions")
     order = crud.order.remove(db=db, id=id)
     return order

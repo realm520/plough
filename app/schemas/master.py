@@ -19,7 +19,7 @@ class MasterRegister(MasterBase):
 # Properties to receive via API on update
 class MasterUpdate(MasterBase):
     name: Optional[str] = None
-    status: Optional[int] = True
+    status: Optional[int] = None
     phone: Optional[str] = None
     rate: Optional[int] = None
     password: Optional[str] = None
@@ -31,6 +31,7 @@ class MasterInDBBase(MasterBase):
     rate: Optional[int] = None
     order_number: Optional[int] = None
     order_amount: Optional[int] = None
+    status: Optional[int] = None
 
     class Config:
         orm_mode = True

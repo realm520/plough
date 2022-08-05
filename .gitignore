@@ -18,6 +18,7 @@ lib/
 lib64/
 parts/
 sdist/
+cert/
 var/
 wheels/
 pip-wheel-metadata/
@@ -103,6 +104,7 @@ celerybeat.pid
 
 # Environments
 .env
+prod.env
 .venv
 env/
 venv/

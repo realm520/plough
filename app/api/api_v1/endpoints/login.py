@@ -51,6 +51,7 @@ def login_access_token(
             raise HTTPException(status_code=400, detail="Inactive user")
         entity = user
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
+
     return {
         "access_token": security.create_access_token(
             data={"sub": str(entity.id), "scopes": form_data.scopes},

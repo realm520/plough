@@ -1,5 +1,6 @@
 from typing import List
-import uuid
+from random import sample
+from string import ascii_letters, digits
 
 from fastapi.encoders import jsonable_encoder
 from sqlalchemy.orm import Session
@@ -14,11 +15,12 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
         self, db: Session, *, obj_in: OrderCreate, owner_id: int
     ) -> Order:
         obj_in_data = jsonable_encoder(obj_in)
+        print(obj_in_data)
         db_obj = self.model(
             **obj_in_data, 
             owner_id=owner_id,
             status=0,
-            order_number=str(uuid.uuid4()))
+            order_number=''.join(sample(ascii_letters + digits, 16)))
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
