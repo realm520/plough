@@ -1,32 +1,41 @@
+from enum import Enum
 from typing import Optional
 
 from pydantic import BaseModel
 
+class OrderStatus(Enum):
+    init: int = 0
+    checked: int = 1
+    done: int = 2
+    cancel: int = 3
+
 
 # Shared properties
 class OrderBase(BaseModel):
+    pass
+
+# Properties to receive on item creation
+class OrderCreate(OrderBase):
     product_name: str
-    master: Optional[str] = None
     master_id: Optional[int] = None
     amount: Optional[int] = 0
     pay_type: Optional[str] = None
 
-# Properties to receive on item creation
-class OrderCreate(OrderBase):
-    pass
-
 
 # Properties to receive on item update
-class OrderUpdate(OrderBase):
-    status: Optional[int] = 0
+class OrderUpdate(OrderCreate):
+    status: Optional[OrderStatus] = OrderStatus.init
 
+class OrderUpdateDivination(OrderBase):
+    divination: Optional[str] = None
 
 # Properties shared by models stored in DB
-class OrderInDBBase(OrderBase):
+class OrderInDBBase(OrderCreate):
     id: int
     order_number: str
     owner_id: int
-    status: Optional[int] = 0
+    divination: Optional[str] = None
+    status: Optional[OrderStatus] = OrderStatus.init
 
     class Config:
         orm_mode = True

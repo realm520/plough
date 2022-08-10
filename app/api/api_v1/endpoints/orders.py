@@ -111,6 +111,28 @@ def update_order(
     return order
 
 
+@router.put("/master/{id}", response_model=schemas.Order)
+def master_update_order(
+    *,
+    db: Session = Depends(deps.get_db),
+    id: int,
+    order_in: schemas.OrderUpdateDivination,
+    current_master: models.User = Depends(deps.get_current_active_master),
+) -> Any:
+    """
+    Update an order by master.
+    """
+    order = crud.order.get(db=db, id=id)
+    if not order:
+        raise HTTPException(status_code=404, detail="Order not found")
+    if order.master_id != current_master.id:
+        raise HTTPException(status_code=400, detail="Not enough permissions")
+    if order.status != schemes.order.OrderStatus.init:
+        raise HTTPException(status_code=400, detail="Not need divination")
+    order = crud.order.updateDivination(db=db, db_obj=order, obj_in=order_in)
+    return order
+
+
 @router.get("/{id}", response_model=schemas.Order)
 def read_order(
     *,
