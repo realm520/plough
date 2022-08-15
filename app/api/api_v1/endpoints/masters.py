@@ -89,8 +89,9 @@ def create_master_open(
     *,
     db: Session = Depends(deps.get_db),
     phone: str = Body(...),
-    password: str = Body(...),
+    verify_code: str = Body(...),
     name: str = Body(None),
+    avatar: str = Body(None),
     settings: AppSettings = Depends(get_app_settings)
 ) -> Any:
     """
@@ -108,8 +109,9 @@ def create_master_open(
             detail="The master with this phone already exists in the system",
         )
     data_in = schemas.MasterRegister(
-        password=password, 
+        verify_code=verify_code, 
         name=name,
+        avatar=avatar,
         phone=phone)
     master = crud.master.register(db, obj_in=data_in)
     return master

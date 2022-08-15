@@ -132,12 +132,13 @@ def get_divination(
     month: int,
     day: int,
     hour: int,
+    sex: int,
     current_user: models.User = Depends(deps.get_current_active_user)
 ) -> Any:
     """
     Get divination.
     """
-    bazi = BaZi(year, month, day, hour)
+    bazi = BaZi(year, month, day, hour, sex)
     return bazi.get_detail()
 
 @router.get("/{user_id}", response_model=schemas.User)

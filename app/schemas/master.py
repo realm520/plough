@@ -13,8 +13,11 @@ class MasterCreate(MasterBase):
 
 
 class MasterRegister(MasterBase):
-    password: Optional[str] = None
+    verify_code: Optional[str] = None
     name: Optional[str] = None
+    avatar: Optional[str] = None
+    phone: Optional[str] = None
+
 
 # Properties to receive via API on update
 class MasterUpdate(MasterBase):

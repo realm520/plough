@@ -40,16 +40,20 @@ class CRUDMaster(CRUDBase[Master, MasterCreate, MasterUpdate]):
         return db_obj
 
     def register(self, db: Session, *, obj_in: MasterRegister) -> Master:
-        db_obj = Master(
-            hashed_password=get_password_hash(obj_in.password),
-            name=obj_in.name,
-            rate=40,
-            phone=obj_in.phone
-        )
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
+        if verify_code == "9999":
+            db_obj = Master(
+                hashed_password='',
+                name=obj_in.name,
+                rate=40,
+                avatar=obj_in.avatar,
+                phone=obj_in.phone
+            )
+            db.add(db_obj)
+            db.commit()
+            db.refresh(db_obj)
+            return db_obj
+        else:
+            return None
 
     def update(
         self, db: Session, *, db_obj: Master, obj_in: Union[MasterUpdate, Dict[str, Any]]

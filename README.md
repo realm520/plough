@@ -14,7 +14,7 @@ backend for little plough
     uvicorn app.main:app --reload
 ```
 
-## Migration
+## Migration DB
 
 ```
 alembic revision --autogenerate -m "Add column last_name to User model"

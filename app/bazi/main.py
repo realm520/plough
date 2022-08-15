@@ -158,7 +158,7 @@ if not options.b:
     print("农历:", end='')
     print("\t{}年{}{}月{}日 穿=害".format(day.getLunarYear(), Lleap, day.getLunarMonth(), day.getLunarDay()))
 print("-"*120)
-print("排盘源码: http://t.cn/E6zzQYj \t\t解读:钉钉或微信pythontesting","\t墓库：", str(kus).replace("'",""))
+print("墓库：", str(kus).replace("'",""))
 print("甲己-中正土  乙庚-仁义金  丙辛-威制水  丁壬-淫慝木  戊癸-无情火", "  三会:", str(zhi_huis).replace("'",""))
 print("="*120)    
 
