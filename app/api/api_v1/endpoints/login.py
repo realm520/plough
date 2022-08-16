@@ -17,6 +17,7 @@ from app.utils import (
     generate_password_reset_token,
     send_reset_password_email,
     verify_password_reset_token,
+    send_verify_code,
 )
 
 router = APIRouter()
@@ -135,8 +136,8 @@ def request_mpcode(
             db.add(m)
             db.commit()
         else:
-            if retry_delta < m.request_time-now:
-                retry_delta = m.request_time-now
+            if retry_delta < m.request_time - valid_request_time:
+                retry_delta = m.request_time - valid_request_time
             need_generate = False
     if need_generate:
         code = ''.join(random.sample('1234567890', 6))
@@ -146,6 +147,7 @@ def request_mpcode(
             status=0
         )
         crud.mpcode.create(db, obj_in=mpcodeCreate)
-        return {"msg": "code generated successfully"}
+        ret = send_verify_code(phone, code)
+        return {"msg": f"code generated successfully: {ret}"}
     else:
         return {"msg": f"please request after {retry_delta} seconds"}

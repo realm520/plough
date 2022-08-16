@@ -24,6 +24,11 @@ class AppSettings(BaseAppSettings):
     USERS_OPEN_REGISTRATION = True
     MASTERS_OPEN_REGISTRATION = True
     ACCESS_TOKEN_EXPIRE_MINUTES = 10
+    SMS_SECRET_ID=''
+    SMS_SECRET_KEY=''
+    SMS_TEMPLATE_ID=''
+    SMS_APP_ID=''
+    SMS_SIGNATURE=''
     mpcode_request_interval = 60
     debug: bool = False
     docs_url: str = "/docs"

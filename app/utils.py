@@ -105,3 +105,30 @@ def verify_password_reset_token(token: str) -> Optional[str]:
         return decoded_token["email"]
     except jwt.JWTError:
         return None
+
+
+def send_verify_code(phone: str, verify_code: str):
+    import json
+    from tencentcloud.common import credential
+    from tencentcloud.common.profile.client_profile import ClientProfile
+    from tencentcloud.common.profile.http_profile import HttpProfile
+    from tencentcloud.common.exception.tencent_cloud_sdk_exception import TencentCloudSDKException
+    from tencentcloud.sms.v20210111 import sms_client, models
+    try:
+        cred = credential.Credential(settings.SMS_SECRET_ID, settings.SMS_SECRET_KEY)
+        client = sms_client.SmsClient(cred, "ap-nanjing")
+        req = models.SendSmsRequest()
+        params = {
+            "PhoneNumberSet": [ phone ],
+            "SignName": settings.SMS_SIGNATURE,
+            "SmsSdkAppId": settings.SMS_APP_ID,
+            "TemplateId": settings.SMS_TEMPLATE_ID,
+            "TemplateParamSet": [ verify_code ]
+        }
+        req.from_json_string(json.dumps(params))
+
+        resp = client.SendSms(req)
+        return resp.to_json_string()
+
+    except TencentCloudSDKException as err:
+        print(err)

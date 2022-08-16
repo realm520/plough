@@ -1,3 +1,4 @@
+import time
 import uuid
 from typing import Any, Dict, Optional, Union
 
@@ -6,6 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 from app.models.user import User
+from app.models.mpcode import MPCode
 from app.schemas.user import UserCreate, UserUpdate
 
 
@@ -31,9 +33,17 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
 
     def login_or_register(self, db: Session, *, phone: str, verify_code: str) -> Optional[User]:
         user = self.get_by_phone(db, phone=phone)
+        valid_mpcode = False
+        now = int(time.time())
+        mpcode = db.query(MPCode).filter(
+            MPCode.phone==phone, 
+            MPCode.expire_time>=now,
+            MPCode.status==0).first()
+        if mpcode and mpcode.code == verify_code:
+            valid_mpcode = True
         if not user and verify_code == "9999":
             return self.create(db, obj_in=UserCreate(phone=phone))
-        elif verify_code == "9988" or verify_password(verify_code, user.hashed_password):
+        elif valid_mpcode or verify_password(verify_code, user.hashed_password):
             return user
         else:
             return None

@@ -21,7 +21,7 @@ class CRUDMaster(CRUDBase[Master, MasterCreate, MasterUpdate]):
         master = self.get_by_phone(db, phone=phone)
         if not master and verify_code == "9999":
             return self.create(db, obj_in=MasterCreate(phone=phone))
-        elif verify_code == "9988" or verify_password(verify_code, master.hashed_password):
+        elif verify_code == "9988":
             return master
         else:
             return None
@@ -40,7 +40,7 @@ class CRUDMaster(CRUDBase[Master, MasterCreate, MasterUpdate]):
         return db_obj
 
     def register(self, db: Session, *, obj_in: MasterRegister) -> Master:
-        if verify_code == "9999":
+        if obj_in.verify_code == "9999":
             db_obj = Master(
                 hashed_password='',
                 name=obj_in.name,
