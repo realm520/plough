@@ -1,6 +1,6 @@
 from typing import TYPE_CHECKING
 
-from sqlalchemy import Boolean, Column, Integer, String
+from sqlalchemy import Boolean, Column, Integer, String, DateTime, func
 from sqlalchemy.orm import relationship
 
 from app.db.base_class import Base
@@ -20,3 +20,4 @@ class User(Base):
     is_active = Column(Boolean(), default=True)
     is_superuser = Column(Boolean(), default=False)
     orders = relationship("Order", back_populates="owner")
+    create_time = Column(DateTime, server_default=func.now(), index=True, comment="创建时间")
