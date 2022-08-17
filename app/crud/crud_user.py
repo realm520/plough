@@ -20,13 +20,14 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_user_summary(
         self, db: Session, *, skip: int = 0, limit: int = 100
     ) -> List[UserSummary]:
-        users = db.query(func.count(Order.id), func.sum(Order.amount), User.phone, User.create_time) \
+        users = db.query(func.count(Order.id), func.sum(Order.amount), User.phone, User.create_time, User.id) \
             .join(Order, Order.owner_id==User.id, isouter=True) \
             .filter(User.is_superuser==False) \
-            .group_by(User.phone, User.create_time).offset(skip).limit(limit).all()
+            .group_by(User.phone, User.create_time, User.id).offset(skip).limit(limit).all()
         ret_obj = []
         for i in users:
             ret_obj.append(UserSummary(
+                id=i.id,
                 phone=i.phone,
                 create_time=str(i.create_time),
                 order_count=i[0],

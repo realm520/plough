@@ -13,6 +13,7 @@ class UserCreate(UserBase):
 
 # Properties to show in Admin page
 class UserSummary(UserBase):
+    id: Optional[int] = None
     create_time: Optional[str] = None
     order_count: Optional[int] = None
     order_amount: Optional[int] = None

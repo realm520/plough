@@ -2,6 +2,7 @@ from .crud_order import order
 from .crud_user import user
 from .crud_mpcode import mpcode
 from .crud_master import master
+from .crud_product import product
 
 # For a new basic set of CRUD operations you could just do
 
