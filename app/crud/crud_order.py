@@ -18,7 +18,7 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
         db_obj = self.model(
             **obj_in_data, 
             owner_id=owner_id,
-            status=0,
+            status=OrderStatus.init.value,
             order_number=''.join(sample(ascii_letters + digits, 16)))
         db.add(db_obj)
         db.commit()
@@ -29,7 +29,7 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
         self, db: Session, *, db_obj: Order, obj_in: OrderUpdateDivination
     ) -> Order:
         db_obj.divination = obj_in.divination
-        db_obj.status = OrderStatus.checked
+        db_obj.status = OrderStatus.checked.value
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)

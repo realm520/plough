@@ -7,7 +7,7 @@ from sqlalchemy.orm import Session
 from app.core.security import get_password_hash, verify_password
 from app.crud.base import CRUDBase
 from app.models.master import Master
-from app.schemas.master import MasterCreate, MasterUpdate, MasterRegister
+from app.schemas.master import MasterCreate, MasterUpdate, MasterRegister, MasterStatus
 
 
 class CRUDMaster(CRUDBase[Master, MasterCreate, MasterUpdate]):
@@ -27,31 +27,42 @@ class CRUDMaster(CRUDBase[Master, MasterCreate, MasterUpdate]):
             return None
 
     def create(self, db: Session, *, obj_in: MasterCreate) -> Master:
-        db_obj = Master(
-            hashed_password=get_password_hash("12345678"),
-            name=''.join(sample(ascii_letters + digits, 12)),
-            rate=40,
-            phone=obj_in.phone,
-            status=0
-        )
-        db.add(db_obj)
-        db.commit()
-        db.refresh(db_obj)
-        return db_obj
-
-    def register(self, db: Session, *, obj_in: MasterRegister) -> Master:
-        if obj_in.verify_code == "9999":
+        master = self.get_by_phone(obj_in.phone)
+        if not master or master.status == MasterStatus.refused:
             db_obj = Master(
-                hashed_password='',
+                hashed_password=get_password_hash("12345678"),
                 name=obj_in.name,
-                rate=40,
                 avatar=obj_in.avatar,
-                phone=obj_in.phone
+                rate=40,
+                phone=obj_in.phone,
+                price=0,
+                status=MasterStatus.inactive.value
             )
             db.add(db_obj)
             db.commit()
             db.refresh(db_obj)
             return db_obj
+        else:
+            return None
+
+    def register(self, db: Session, *, obj_in: MasterRegister) -> Master:
+        if obj_in.verify_code == "9999":
+            master = self.get_by_phone(db=db, phone=obj_in.phone)
+            if not master or master.status == MasterStatus.refused:
+                db_obj = Master(
+                    hashed_password=get_password_hash("12345678"),
+                    name=obj_in.name,
+                    avatar=obj_in.avatar,
+                    rate=40,
+                    phone=obj_in.phone,
+                    status=MasterStatus.inactive.value
+                )
+                db.add(db_obj)
+                db.commit()
+                db.refresh(db_obj)
+                return db_obj
+            else:
+                return None
         else:
             return None
 

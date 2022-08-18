@@ -2,6 +2,6 @@ from .order import Order, OrderCreate, OrderInDB, OrderUpdate, OrderUpdateDivina
 from .msg import Msg
 from .token import Token, TokenPayload
 from .user import User, UserCreate, UserInDB, UserUpdate, UserSummary
-from .master import Master, MasterCreate, MasterInDB, MasterUpdate, MasterRegister
+from .master import Master, MasterCreate, MasterUpdate, MasterRegister, MasterForOrder
 from .mpcode import MPCode, MPCodeCreate, MPCodeInDB, MPCodeUpdate
-from .product import Product, ProductCreate, ProductUpdate
+from .product import Product, ProductCreate, ProductUpdate, ProductForOrder

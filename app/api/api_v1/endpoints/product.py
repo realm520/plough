@@ -16,8 +16,7 @@ from app.core.settings.app import AppSettings
 router = APIRouter()
 
 
-
-@router.get("/info", response_model=List[schemas.Product])
+@router.get("/list", response_model=List[schemas.ProductForOrder])
 def read_product(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -25,12 +24,28 @@ def read_product(
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
+    Retrieve products.
+    """
+    products = crud.product.get_multi(db, skip=skip, limit=limit)
+    ret_obj = []
+    for p in products:
+        ret_obj.append(schemas.ProductForOrder(
+            id=p.id,
+            name=p.name
+        ))
+    return ret_obj
+
+@router.get("/info", response_model=List[schemas.Product])
+def read_product(
+    db: Session = Depends(deps.get_db),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
     Retrieve products (admin only).
     """
-    if crud.user.is_superuser(current_user):
-        products = crud.product.get_multi(db, skip=skip, limit=limit)
-    else:
-        raise HTTPException(status_code=404, detail="Not enough permissions")
+    products = crud.product.get_multi(db, skip=skip, limit=limit)
     return products
 
 @router.post("/", response_model=schemas.Product)

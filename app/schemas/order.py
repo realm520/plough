@@ -16,7 +16,7 @@ class OrderBase(BaseModel):
 
 # Properties to receive on item creation
 class OrderCreate(OrderBase):
-    product_name: str
+    product_id: int
     master_id: Optional[int] = None
     amount: Optional[int] = 0
     pay_type: Optional[str] = None
@@ -35,6 +35,7 @@ class OrderInDBBase(OrderCreate):
     order_number: str
     owner_id: int
     divination: Optional[str] = None
+    create_time: Optional[str] = None
     status: Optional[OrderStatus] = OrderStatus.init
 
     class Config:
@@ -43,7 +44,7 @@ class OrderInDBBase(OrderCreate):
 
 # Properties to return to client
 class Order(OrderInDBBase):
-    pass
+    master_name: Optional[str] = None
 
 
 # Properties properties stored in DB

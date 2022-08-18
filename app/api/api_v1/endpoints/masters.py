@@ -14,7 +14,27 @@ from app.bazi import BaZi
 router = APIRouter()
 
 
-@router.get("/", response_model=List[schemas.Master])
+@router.get("/", response_model=List[schemas.MasterForOrder])
+def read_masters(
+    db: Session = Depends(deps.get_db),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Retrieve master list for placing order.
+    """
+    masters = crud.master.get_multi(db, skip=skip, limit=limit)
+    ret_obj = []
+    for m in masters:
+        ret_obj.append(schemas.MasterForOrder(
+            name=m.name,
+            id=m.id,
+            price=m.price
+        ))
+    return ret_obj
+
+@router.get("/list", response_model=List[schemas.Master])
 def read_masters(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -24,9 +44,8 @@ def read_masters(
     """
     Retrieve masters. (superuser only)
     """
-    users = crud.user.get_multi(db, skip=skip, limit=limit)
-    return users
-
+    masters = crud.master.get_multi(db, skip=skip, limit=limit)
+    return masters
 
 @router.post("/", response_model=schemas.Master)
 def create_master(
@@ -102,12 +121,12 @@ def create_master_open(
             status_code=403,
             detail="Open master registration is forbidden on this server",
         )
-    master = crud.master.get_by_phone(db, phone=phone)
-    if master:
-        raise HTTPException(
-            status_code=400,
-            detail="The master with this phone already exists in the system",
-        )
+    # master = crud.master.get_by_phone(db, phone=phone)
+    # if master:
+    #     raise HTTPException(
+    #         status_code=400,
+    #         detail="The master with this phone already exists in the system",
+    #     )
     data_in = schemas.MasterRegister(
         verify_code=verify_code, 
         name=name,
