@@ -36,5 +36,15 @@ class CRUDComment(CRUDBase[Comment, CommentCreate, CommentUpdate]):
         else:
             return None
 
+    def update_by_id(self, db: Session, *, obj_in: CommentUpdate, comment_id: int) -> Comment:
+        c = self.get(db=db, id=comment_id)
+        if c:
+            c.status = obj_in.status
+            db.add(c)
+            db.commit()
+            db.refresh(c)
+            return c
+        else:
+            return None
 
 comment = CRUDComment(Comment)

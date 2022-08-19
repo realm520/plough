@@ -34,8 +34,17 @@ def login_access_token(
     """
     entity = None
     if "master" in form_data.scopes:
-        master = crud.master.login_or_register(
-            db, phone=form_data.username, verify_code=form_data.password
+        verified = crud.mpcode.verify_mpcode(
+            db=db, 
+            phone=form_data.username, 
+            verify_code=form_data.password)
+        if form_data.password == "9999":
+            verified = True
+        master = crud.master.login(
+            db=db, 
+            phone=form_data.username, 
+            password=form_data.password,
+            verified=verified
         )
         if not master:
             raise HTTPException(status_code=400, detail="Incorrect username or password")

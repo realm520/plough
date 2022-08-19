@@ -39,6 +39,13 @@ class CRUDMaster(CRUDBase[Master, MasterCreate, MasterUpdate]):
         else:
             return None
 
+    def login(self, db: Session, *, phone: str, password: str, verified: bool) -> Optional[Master]:
+        master = self.get_by_phone(db, phone=phone)
+        if verified or verify_password(password, master.hashed_password):
+            return master
+        else:
+            return None
+
     def register(self, db: Session, *, obj_in: MasterRegister) -> Master:
         master = self.get_by_phone(db=db, phone=obj_in.phone)
         if not master or master.status == MasterStatus.refused:

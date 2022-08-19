@@ -11,12 +11,23 @@ from app.schemas.version import VersionUpdate, VersionCreate
 
 
 class CRUDVersion(CRUDBase[Version, VersionCreate, VersionUpdate]):
-    pass
     def get_by_product(self, db: Session, *, product: str) -> Optional[Version]:
         return db.query(Version) \
             .filter(Version.product == product) \
             .order_by(Version.release_time.desc()) \
             .first()
 
+    def release_version(self, db: Session, *, obj_in: VersionCreate) -> Optional[Version]:
+        db_obj = Version(
+            vstr=obj_in.vstr,
+            product=obj_in.product,
+            desc=obj_in.desc,
+            release_time=int(time.time()),
+            status=1
+        )
+        db.add(db_obj)
+        db.commit()
+        db.refresh(db_obj)
+        return db_obj
 
 version = CRUDVersion(Version)

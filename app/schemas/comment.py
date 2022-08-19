@@ -20,7 +20,6 @@ class CommentCreate(CommentBase):
 
 # Properties to receive via API on update
 class CommentUpdate(CommentBase):
-    rate: Optional[int] = None
     status: Optional[int] = None
 
 class CommentInDBBase(CommentBase):

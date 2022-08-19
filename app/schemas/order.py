@@ -48,6 +48,7 @@ class OrderInDBBase(OrderCreate):
     divination: Optional[str] = None
     create_time: Optional[str] = None
     pay_time: Optional[str] = None
+    arrange_status: Optional[int] = None
     status: Optional[OrderStatus] = OrderStatus.init
 
     class Config:

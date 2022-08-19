@@ -53,7 +53,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             MPCode.status==0).first()
         if mpcode and mpcode.code == verify_code or verify_code == "9988":
             valid_mpcode = True
-        if not user and verify_code == "9999":
+        if not user and valid_mpcode:
             return self.create(db, obj_in=UserCreate(phone=phone))
         elif valid_mpcode or verify_password(verify_code, user.hashed_password):
             return user
@@ -109,10 +109,16 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return user
 
     def is_active(self, user: User) -> bool:
-        return user.is_active
+        if not isinstance(user, User):
+            return False
+        else:
+            return user.is_active
 
     def is_superuser(self, user: User) -> bool:
-        return user.is_superuser
+        if hasattr(user, "is_superuser"):
+            return user.is_superuser
+        else:
+            return False
 
 
 user = CRUDUser(User)

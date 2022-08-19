@@ -16,11 +16,10 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
         self, db: Session, *, obj_in: OrderCreate, owner_id: int
     ) -> Order:
         obj_in_data = jsonable_encoder(obj_in)
-        db_obj = self.model(
+        db_obj = Order(
             **obj_in_data, 
             owner_id=owner_id,
             arrange_status=0,
-            create_time=int(time.time()),
             status=OrderStatus.init.value,
             order_number=''.join(sample(ascii_letters + digits, 16)))
         db.add(db_obj)
@@ -56,7 +55,7 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
     ) -> List[Order]:
         return (
             db.query(self.model)
-            .filter(Order.master_id == master_id)
+            .filter(Order.master_id == master_id, Order.status!=0)
             .order_by(Order.id.desc())
             .offset(skip)
             .limit(limit)

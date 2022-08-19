@@ -18,6 +18,18 @@ router = APIRouter()
 
 
 
+@router.get("/summary", response_model=List[schemas.Order])
+def read_orders(
+    db: Session = Depends(deps.get_db),
+    skip: int = 0,
+    limit: int = 100,
+    current_user: models.User = Depends(deps.get_current_active_user),
+) -> Any:
+    """
+    Retrieve orders (User & SuperUser).
+    """
+
+
 @router.get("/", response_model=List[schemas.Order])
 def read_orders(
     db: Session = Depends(deps.get_db),
@@ -50,11 +62,13 @@ def read_orders(
             sex=o.sex,
             birthday=o.birthday,
             location=o.location,
+            amount=o.amount,
             owner_id=o.owner_id,
             master_id=o.master_id,
             divination=o.divination,
             create_time=str(o.create_time),
             pay_time=str(o.pay_time),
+            arrange_status=o.arrange_status,
             status=o.status,
             master=o.master.name,
             owner=o.owner.user_name
@@ -73,7 +87,7 @@ def read_orders_master(
     Retrieve orders (Master).
     """
     orders = crud.order.get_multi_by_master(
-        db=db, owner_id=current_master.id, skip=skip, limit=limit
+        db=db, master_id=current_master.id, skip=skip, limit=limit
     )
     #FIXME, not check count
     products = crud.product.get_multi(db=db)
@@ -97,6 +111,7 @@ def read_orders_master(
             divination=o.divination,
             create_time=str(o.create_time),
             pay_time=str(o.pay_time),
+            arrange_status=o.arrange_status,
             status=o.status,
             master=o.master.name,
             owner=o.owner.user_name
@@ -144,7 +159,8 @@ def create_order(
     result = json.loads(message)
     if code in range(200, 300):
         prepay_id = result.get('prepay_id')
-        timestamp = int(time.time())
+        timearray = time.strptime(order_in.create_time, "%Y-%m-%d %H:%M:%S")
+        timestamp = int(time.mktime(timearray))
         noncestr = ''.join(sample(ascii_letters + digits, 8))
         package = 'Sign=WXPay'
         paysign = wxpay.sign([settings.APPID, str(timestamp), noncestr, prepay_id])
@@ -156,6 +172,7 @@ def create_order(
             'package': package,
             'nonceStr': noncestr,
             'timestamp': timestamp,
+            'price': order.amount,
             'sign': paysign
         }}
     else:
@@ -241,6 +258,7 @@ def read_order_by_id(
         create_time=str(order.create_time),
         pay_time=str(order.pay_time),
         status=order.status,
+        arrange_status=order.arrange_status,
         master=order.master.name,
         owner=order.owner.user_name
     )

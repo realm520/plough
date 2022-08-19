@@ -71,11 +71,16 @@ def create_comment(
             status_code=403,
             detail="Order not found",
         )
+    if current_user.id != order.user_id:
+        raise HTTPException(
+            status_code=403,
+            detail="User is not order owner",
+        )
     comment = crud.comment.create(db, obj_in=obj_in, master_id=order.master_id, user_id=order.owner_id)
     return comment
 
 
-@router.put("/{comment_id}", response_model=schemas.Master)
+@router.put("/{comment_id}", response_model=schemas.Comment)
 def update_comment_by_id(
     *,
     db: Session = Depends(deps.get_db),
@@ -86,12 +91,12 @@ def update_comment_by_id(
     """
     Update a master. (superuser only)
     """
-    master = crud.master.get(db, id=master_id)
-    if not master:
+    order = crud.order.get(db, id=obj_in.order_id)
+    if not order:
         raise HTTPException(
-            status_code=404,
-            detail="The master with this phone does not exist in the system",
+            status_code=403,
+            detail="Order not found",
         )
-    master = crud.master.update(db, db_obj=master, obj_in=obj_in)
-    return master
+    comment = crud.comment.update_by_id(db=db, obj_in=obj_in, comment_id=comment_id)
+    return comment
 
