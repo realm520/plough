@@ -11,6 +11,7 @@ from app.schemas.mpcode import MPCodeCreate, MPCodeUpdate
 
 
 class CRUDMPCode(CRUDBase[MPCode, MPCodeCreate, MPCodeUpdate]):
+    #FIXME, no lock for fetching code in parallel
     def create(
         self, db: Session, *, obj_in: MPCodeCreate
     ) -> MPCode:
@@ -20,6 +21,18 @@ class CRUDMPCode(CRUDBase[MPCode, MPCodeCreate, MPCodeUpdate]):
         db.commit()
         db.refresh(db_obj)
         return db_obj
+
+    def verify_mpcode(self, db: Session, *, phone: str, verify_code: str) -> bool:
+        now = int(time.time())
+        valid_codes = db.query(MPCode).filter(MPCode.phone==phone, MPCode.status==0).all()
+        for c in valid_codes:
+            if c.expire_time >= now:
+                c.status = 1
+                db.add(c)
+                db.commit()
+                db.refresh(c)
+                return True
+        return False
 
     def get_unused_code(self, db: Session, *, phone: str) -> List[MPCode]:
         return (

@@ -3,6 +3,8 @@ from .crud_user import user
 from .crud_mpcode import mpcode
 from .crud_master import master
 from .crud_product import product
+from .crud_comment import comment
+from .crud_version import version
 
 # For a new basic set of CRUD operations you could just do
 

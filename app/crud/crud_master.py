@@ -17,14 +17,8 @@ class CRUDMaster(CRUDBase[Master, MasterCreate, MasterUpdate]):
     def get_by_phone(self, db: Session, *, phone: str) -> Optional[Master]:
         return db.query(Master).filter(Master.phone == phone).first()
 
-    def login_or_register(self, db: Session, *, phone: str, verify_code: str) -> Optional[Master]:
-        master = self.get_by_phone(db, phone=phone)
-        if not master and verify_code == "9999":
-            return self.create(db, obj_in=MasterCreate(phone=phone))
-        elif verify_code == "9988":
-            return master
-        else:
-            return None
+    def get_by_status(self, db: Session, *, status: int, skip: int = 0, limit: int = 100) -> Optional[Master]:
+        return db.query(Master).filter(Master.status == status).offset(skip).limit(limit).all()
 
     def create(self, db: Session, *, obj_in: MasterCreate) -> Master:
         master = self.get_by_phone(obj_in.phone)
@@ -46,23 +40,20 @@ class CRUDMaster(CRUDBase[Master, MasterCreate, MasterUpdate]):
             return None
 
     def register(self, db: Session, *, obj_in: MasterRegister) -> Master:
-        if obj_in.verify_code == "9999":
-            master = self.get_by_phone(db=db, phone=obj_in.phone)
-            if not master or master.status == MasterStatus.refused:
-                db_obj = Master(
-                    hashed_password=get_password_hash("12345678"),
-                    name=obj_in.name,
-                    avatar=obj_in.avatar,
-                    rate=40,
-                    phone=obj_in.phone,
-                    status=MasterStatus.inactive.value
-                )
-                db.add(db_obj)
-                db.commit()
-                db.refresh(db_obj)
-                return db_obj
-            else:
-                return None
+        master = self.get_by_phone(db=db, phone=obj_in.phone)
+        if not master or master.status == MasterStatus.refused:
+            db_obj = Master(
+                hashed_password=get_password_hash("12345678"),
+                name=obj_in.name,
+                avatar=obj_in.avatar,
+                rate=40,
+                phone=obj_in.phone,
+                status=MasterStatus.inactive.value
+            )
+            db.add(db_obj)
+            db.commit()
+            db.refresh(db_obj)
+            return db_obj
         else:
             return None
 
@@ -80,7 +71,10 @@ class CRUDMaster(CRUDBase[Master, MasterCreate, MasterUpdate]):
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
     def is_active(self, master: Master) -> bool:
-        return master.status == 1
+        if hasattr(master, "status"):
+            return master.status == 1
+        else:
+            return False
 
 
 master = CRUDMaster(Master)

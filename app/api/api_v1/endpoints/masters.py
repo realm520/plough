@@ -37,6 +37,7 @@ def read_masters(
 @router.get("/list", response_model=List[schemas.Master])
 def read_masters(
     db: Session = Depends(deps.get_db),
+    status: int = -1,
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_superuser),
@@ -44,7 +45,10 @@ def read_masters(
     """
     Retrieve masters. (superuser only)
     """
-    masters = crud.master.get_multi(db, skip=skip, limit=limit)
+    if status < 0:
+        masters = crud.master.get_multi(db, skip=skip, limit=limit)
+    else:
+        masters = crud.master.get_by_status(db, status=status, skip=skip, limit=limit)
     return masters
 
 @router.post("/", response_model=schemas.Master)
@@ -121,12 +125,17 @@ def create_master_open(
             status_code=403,
             detail="Open master registration is forbidden on this server",
         )
-    # master = crud.master.get_by_phone(db, phone=phone)
-    # if master:
-    #     raise HTTPException(
-    #         status_code=400,
-    #         detail="The master with this phone already exists in the system",
-    #     )
+    master = crud.master.get_by_phone(db, phone=phone)
+    if master:
+        raise HTTPException(
+            status_code=400,
+            detail="The master with this phone already exists in the system",
+        )
+    if not crud.mpcode.verify_mpcode(db=db, phone=phone, verify_code=verify_code):
+        raise HTTPException(
+            status_code=400,
+            detail="Invalid verify code",
+        )
     data_in = schemas.MasterRegister(
         verify_code=verify_code, 
         name=name,

@@ -1,3 +1,4 @@
+import time
 from typing import List
 from random import sample
 from string import ascii_letters, digits
@@ -18,6 +19,8 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
         db_obj = self.model(
             **obj_in_data, 
             owner_id=owner_id,
+            arrange_status=0,
+            create_time=int(time.time()),
             status=OrderStatus.init.value,
             order_number=''.join(sample(ascii_letters + digits, 16)))
         db.add(db_obj)
@@ -30,6 +33,7 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
     ) -> Order:
         db_obj.divination = obj_in.divination
         db_obj.status = OrderStatus.checked.value
+        db_obj.arrange_status = 1
         db.add(db_obj)
         db.commit()
         db.refresh(db_obj)
@@ -41,10 +45,22 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
         return (
             db.query(self.model)
             .filter(Order.owner_id == owner_id)
+            .order_by(Order.id.desc())
             .offset(skip)
             .limit(limit)
             .all()
         )
 
+    def get_multi_by_master(
+        self, db: Session, *, master_id: int, skip: int = 0, limit: int = 100
+    ) -> List[Order]:
+        return (
+            db.query(self.model)
+            .filter(Order.master_id == master_id)
+            .order_by(Order.id.desc())
+            .offset(skip)
+            .limit(limit)
+            .all()
+        )
 
 order = CRUDOrder(Order)

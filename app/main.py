@@ -32,4 +32,4 @@ app = get_application()
 
 @app.get("/")
 async def root():
-    return {"message": "Hello Bigger Applications!"}
+    return {"message": "Hello Plough!"}

@@ -12,6 +12,7 @@ class ProductBase(BaseModel):
 class ProductForOrder(BaseModel):
     name: Optional[str] = None
     id: Optional[int] = None
+    desc: Optional[str] = None
 
 # Properties to receive via API on creation
 class ProductCreate(ProductBase):

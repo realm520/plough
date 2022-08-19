@@ -40,6 +40,7 @@ class MasterUpdate(MasterBase):
     rate: Optional[int] = None
     password: Optional[str] = None
     price: Optional[int] = None
+    desc: Optional[str] = None
 
 
 class MasterInDBBase(MasterBase):
@@ -48,7 +49,9 @@ class MasterInDBBase(MasterBase):
     rate: Optional[int] = None
     order_number: Optional[int] = None
     order_amount: Optional[int] = None
+    price: Optional[int] = None
     create_time: Optional[datetime] = None
+    desc: Optional[str] = None
     status: Optional[int] = None
 
     class Config:

@@ -31,7 +31,8 @@ def read_product(
     for p in products:
         ret_obj.append(schemas.ProductForOrder(
             id=p.id,
-            name=p.name
+            name=p.name,
+            desc=p.desc
         ))
     return ret_obj
 

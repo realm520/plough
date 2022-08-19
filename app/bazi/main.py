@@ -12,7 +12,7 @@ import datetime
 
 from bidict import bidict
 
-from .datas import *
+from datas import *
 from sizi import summarys
 from common import *
 

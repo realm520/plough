@@ -2,7 +2,7 @@ from typing import Any
 
 from fastapi import APIRouter, Depends
 from pydantic.networks import EmailStr
-
+from sqlalchemy.orm import Session
 from app import models, schemas
 from app.api import deps
 # from app.core.celery_app import celery_app
@@ -32,4 +32,15 @@ def test_email(
     Test emails.
     """
     send_test_email(email_to=email_to)
+    return {"msg": "Test email sent"}
+
+@router.post("/get-latest-version/", response_model=schemas.Msg, status_code=201)
+def get_latest_version(
+    product: str,
+    db: Session = Depends(deps.get_db),
+) -> Any:
+    """
+    Get latest version.
+    """
+    version = crud.version.get_by_product(db, )
     return {"msg": "Test email sent"}

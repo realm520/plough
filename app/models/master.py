@@ -9,6 +9,7 @@ class Master(Base):
     phone = Column(String, unique=True, index=True)
     hashed_password = Column(String, nullable=False)
     avatar = Column(String, comment="头像")
+    desc = Column(String, comment="老师介绍")
     rate = Column(Integer, nullable=False, comment="分成比例")
     price = Column(Integer, comment="排盘价格")
     create_time = Column(DateTime, server_default=func.now(), index=True, comment="创建时间")
