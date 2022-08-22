@@ -22,6 +22,8 @@ class CRUDVersion(CRUDBase[Version, VersionCreate, VersionUpdate]):
             vstr=obj_in.vstr,
             product=obj_in.product,
             desc=obj_in.desc,
+            memo=obj_in.memo,
+            url=obj_in.url,
             release_time=int(time.time()),
             status=1
         )

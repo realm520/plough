@@ -8,6 +8,7 @@ class VersionBase(BaseModel):
     product: Optional[str] = None
     vstr: Optional[str] = None
     desc: Optional[str] = None
+    memo: Optional[str] = None
     url: Optional[str] = None
 
 # Properties to receive via API on creation
@@ -17,6 +18,7 @@ class VersionCreate(VersionBase):
 # Properties to receive via API on update
 class VersionUpdate(VersionBase):
     release_time: Optional[int] = None
+    status: Optional[int] = None
 
 class VersionInDBBase(VersionBase):
     id: Optional[int] = None

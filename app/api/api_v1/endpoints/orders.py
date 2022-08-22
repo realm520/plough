@@ -31,7 +31,10 @@ def read_orders(
     """
     Retrieve orders (User & SuperUser).
     """
-    total, orders = crud.order.get_multi_with_condition(db, role=0, role_id=current_user.id, status=status, skip=skip, limit=limit)
+    if crud.user.is_superuser(current_user):
+        total, orders = crud.order.get_multi_with_condition(db, role=0, role_id=current_user.id, status=status, skip=skip, limit=limit)
+    else:
+        total, orders = crud.order.get_multi_with_condition(db, role=1, role_id=current_user.id, status=status, skip=skip, limit=limit)
     #FIXME, not check count
     ret_obj = schemas.OrderQuery(total=0, orders=[])
     ret_obj.total = total
@@ -53,6 +56,7 @@ def read_orders(
             owner_id=o.owner_id,
             master_id=o.master_id,
             divination=o.divination,
+            reason=o.reason,
             create_time=str(o.create_time),
             pay_time=str(o.pay_time),
             arrange_status=o.arrange_status,
@@ -99,6 +103,7 @@ def read_orders_master(
             owner_id=o.owner_id,
             master_id=o.master_id,
             divination=o.divination,
+            reason=o.reason,
             create_time=str(o.create_time),
             pay_time=str(o.pay_time),
             arrange_status=o.arrange_status,
@@ -252,6 +257,7 @@ def master_update_order(
         owner_id=order.owner_id,
         master_id=order.master_id,
         divination=order.divination,
+        reason=order.reason,
         create_time=str(order.create_time),
         pay_time=str(order.pay_time),
         status=order.status,
@@ -295,6 +301,7 @@ def read_order_by_id(
         owner_id=order.owner_id,
         master_id=order.master_id,
         divination=order.divination,
+        reason=order.reason,
         create_time=str(order.create_time),
         pay_time=str(order.pay_time),
         status=order.status,
@@ -304,19 +311,3 @@ def read_order_by_id(
         owner=order.owner.user_name
     )
 
-
-# @router.delete("/{id}", response_model=schemas.Order)
-# def delete_order(
-#     *,
-#     db: Session = Depends(deps.get_db),
-#     id: int,
-#     current_user: models.User = Depends(deps.get_current_active_superuser),
-# ) -> Any:
-#     """
-#     Delete an order.
-#     """
-#     order = crud.order.get(db=db, id=id)
-#     if not order:
-#         raise HTTPException(status_code=404, detail="Order not found")
-#     order = crud.order.remove(db=db, id=id)
-#     return order

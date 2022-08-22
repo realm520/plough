@@ -34,7 +34,7 @@ def test_email(
     send_test_email(email_to=email_to)
     return {"msg": "Test email sent"}
 
-@router.get("/get-latest-version/", response_model=schemas.Version, status_code=201)
+@router.get("/get-latest-version", response_model=schemas.Version, status_code=201)
 def get_latest_version(
     product: str,
     db: Session = Depends(deps.get_db),
@@ -69,3 +69,23 @@ def release_version(
     """
     version = crud.version.release_version(db=db, obj_in=obj_in)
     return version
+
+@router.put("/{version_id}", response_model=schemas.Version)
+def update_version(
+    *,
+    db: Session = Depends(deps.get_db),
+    version_id: int,
+    obj_in: schemas.VersionUpdate,
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
+    Update a release version.
+    """
+    version = crud.version.get(db, id=version_id)
+    if not version:
+        raise HTTPException(
+            status_code=404,
+            detail="The version does not exist in the system",
+        )
+    version_new = crud.version.update(db, db_obj=version, obj_in=obj_in)
+    return version_new

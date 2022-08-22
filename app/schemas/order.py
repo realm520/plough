@@ -48,6 +48,7 @@ class OrderInDBBase(OrderCreate):
     location: Optional[str] = None
     amount: Optional[int] = None
     divination: Optional[str] = None
+    reason: Optional[str] = None
     create_time: Optional[str] = None
     pay_time: Optional[str] = None
     arrange_status: Optional[int] = None

@@ -32,7 +32,7 @@ MarkupSafe==2.1.1
 orjson==3.7.8
 passlib==1.7.4
 premailer==3.10.0
-psycopg2==2.9.3
+psycopg2-binary==2.9.3
 pyasn1==0.4.8
 pycparser==2.21
 pydantic==1.9.1
