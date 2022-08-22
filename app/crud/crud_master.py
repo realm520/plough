@@ -17,8 +17,15 @@ class CRUDMaster(CRUDBase[Master, MasterCreate, MasterUpdate]):
     def get_by_phone(self, db: Session, *, phone: str) -> Optional[Master]:
         return db.query(Master).filter(Master.phone == phone).first()
 
-    def get_by_status(self, db: Session, *, status: int, skip: int = 0, limit: int = 100) -> Optional[Master]:
-        return db.query(Master).filter(Master.status == status).offset(skip).limit(limit).all()
+    def get_multi_with_conditions(self, db: Session, *, status: int, skip: int = 0, limit: int = 100) -> Optional[Master]:
+        query = db.query(Master)
+        if status >= 0:
+            query = query.filter(Master.status == status)
+        return (
+            query.count(),
+            query.offset(skip).limit(limit).all()
+        )
+        
 
     def create(self, db: Session, *, obj_in: MasterCreate) -> Master:
         master = self.get_by_phone(obj_in.phone)

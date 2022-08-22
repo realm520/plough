@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 
 from pydantic import BaseModel
 
@@ -17,19 +17,21 @@ class OrderBase(BaseModel):
 # Properties to receive on item creation
 class OrderCreate(OrderBase):
     product_id: int
-    name: str
-    sex: int
-    birthday: str
-    location: str
-    master_id: int
-    amount: Optional[int] = 0
-    create_time: Optional[str] = None
+    name: Optional[str]
+    sex: Optional[int]
+    birthday: Optional[str]
+    location: Optional[str]
+    master_id: Optional[int]
+    amount: Optional[int]
+    create_time: Optional[str]
     pay_type: Optional[str] = "wx"
 
 
 # Properties to receive on item update
 class OrderUpdate(OrderCreate):
-    status: Optional[OrderStatus] = OrderStatus.init
+    arrange_status: Optional[int]
+    reason: Optional[str]
+    status: Optional[int]
 
 class OrderUpdateDivination(OrderBase):
     divination: Optional[str] = None
@@ -49,7 +51,7 @@ class OrderInDBBase(OrderCreate):
     create_time: Optional[str] = None
     pay_time: Optional[str] = None
     arrange_status: Optional[int] = None
-    status: Optional[OrderStatus] = OrderStatus.init
+    status: Optional[int] = OrderStatus.init.value
 
     class Config:
         orm_mode = True
@@ -61,6 +63,10 @@ class Order(OrderInDBBase):
     master_avatar: Optional[str] = None
     owner: Optional[str] = None
     product: Optional[str] = None
+
+class OrderQuery(BaseModel):
+    total: int = 0
+    orders: List[Order]
 
 # Properties properties stored in DB
 class OrderInDB(OrderInDBBase):

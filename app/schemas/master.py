@@ -1,5 +1,5 @@
 from enum import Enum
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 from pydantic import BaseModel, EmailStr
 
@@ -62,6 +62,9 @@ class MasterInDBBase(MasterBase):
 class Master(MasterInDBBase):
     pass
 
+class MasterQuery(BaseModel):
+    total: int
+    masters: List[Master]
 
 # Additional properties stored in DB
 class MasterInDB(MasterInDBBase):

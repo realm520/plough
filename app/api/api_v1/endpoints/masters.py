@@ -34,7 +34,7 @@ def read_masters(
         ))
     return ret_obj
 
-@router.get("/list", response_model=List[schemas.Master])
+@router.get("/list", response_model=schemas.MasterQuery)
 def read_masters(
     db: Session = Depends(deps.get_db),
     status: int = -1,
@@ -45,11 +45,12 @@ def read_masters(
     """
     Retrieve masters. (superuser only)
     """
-    if status < 0:
-        masters = crud.master.get_multi(db, skip=skip, limit=limit)
-    else:
-        masters = crud.master.get_by_status(db, status=status, skip=skip, limit=limit)
-    return masters
+    total, masters = crud.master.get_multi_with_conditions(db=db, status=status, skip=skip, limit=limit)
+    ret_obj = schemas.MasterQuery(
+        total=total,
+        masters=masters
+    )
+    return ret_obj
 
 @router.post("/", response_model=schemas.Master)
 def create_master(

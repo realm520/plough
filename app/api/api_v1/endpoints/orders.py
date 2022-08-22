@@ -19,25 +19,11 @@ router = APIRouter()
 
 
 
-@router.get("/summary")
-def read_orders_summary(
-    db: Session = Depends(deps.get_db),
-    current_user: models.User = Depends(deps.get_current_active_user),
-) -> Any:
-    """
-    Retrieve orders summary(User & SuperUser).
-    """
-    if crud.user.is_superuser(current_user):
-        orders = crud.order.get_summary(db, 0, 0)
-    else:
-        orders = crud.order.get_summary(db, 0, current_user.id)
-    return {
-        "total": orders
-    }
 
-@router.get("/", response_model=List[schemas.Order])
+@router.get("/", response_model=schemas.OrderQuery)
 def read_orders(
     db: Session = Depends(deps.get_db),
+    status: int = -1,
     skip: int = 0,
     limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -45,20 +31,16 @@ def read_orders(
     """
     Retrieve orders (User & SuperUser).
     """
-    if crud.user.is_superuser(current_user):
-        orders = crud.order.get_multi(db, skip=skip, limit=limit)
-    else:
-        orders = crud.order.get_multi_by_owner(
-            db=db, owner_id=current_user.id, skip=skip, limit=limit
-        )
+    total, orders = crud.order.get_multi_with_condition(db, role=0, role_id=current_user.id, status=status, skip=skip, limit=limit)
     #FIXME, not check count
+    ret_obj = schemas.OrderQuery(total=0, orders=[])
+    ret_obj.total = total
     products = crud.product.get_multi(db=db)
-    ret_obj = []
     for o in orders:
         for p in products:
             if p.id == o.product_id:
                 product = p.name
-        ret_obj.append(schemas.Order(
+        ret_obj.orders.append(schemas.Order(
             id=o.id,
             product_id=o.product_id,
             product=product,
@@ -82,9 +64,10 @@ def read_orders(
     return ret_obj
 
 
-@router.get("/master", response_model=List[schemas.Order])
+@router.get("/master", response_model=schemas.OrderQuery)
 def read_orders_master(
     db: Session = Depends(deps.get_db),
+    status: int = -1,
     skip: int = 0,
     limit: int = 100,
     current_master: models.Master = Depends(deps.get_current_active_master),
@@ -92,17 +75,18 @@ def read_orders_master(
     """
     Retrieve orders (Master).
     """
-    orders = crud.order.get_multi_by_master(
-        db=db, master_id=current_master.id, skip=skip, limit=limit
+    total, orders = crud.order.get_multi_with_condition(
+        db=db, role=2, role_id=current_master.id, status=status, skip=skip, limit=limit
     )
     #FIXME, not check count
     products = crud.product.get_multi(db=db)
-    ret_obj = []
+    ret_obj = schemas.OrderQuery(total=0, orders=[])
+    ret_obj.total = total
     for o in orders:
         for p in products:
             if p.id == o.product_id:
                 product = p.name
-        ret_obj.append(schemas.Order(
+        ret_obj.orders.append(schemas.Order(
             id=o.id,
             product_id=o.product_id,
             product=product,
@@ -204,7 +188,7 @@ def create_order(
 
 
 
-@router.put("/{id}", response_model=schemas.Order)
+@router.put("/{id}", response_model=schemas.OrderUpdate)
 def update_order(
     *,
     db: Session = Depends(deps.get_db),
@@ -221,7 +205,18 @@ def update_order(
     # if not crud.user.is_superuser(current_user) and (order.owner_id != current_user.id):
     #     raise HTTPException(status_code=400, detail="Not enough permissions")
     order = crud.order.update(db=db, db_obj=order, obj_in=order_in)
-    return order
+    return schemas.OrderUpdate(
+        product_id=order.product_id,
+        name=order.name,
+        sex=order.sex,
+        birthday=order.birthday,
+        location=order.location,
+        master_id=order.master_id,
+        amount=order.amount,
+        reason=order.reason,
+        arrange_status=order.arrange_status,
+        status=order.status
+    )
 
 
 @router.put("/master/{id}", response_model=schemas.Order)
@@ -240,7 +235,7 @@ def master_update_order(
         raise HTTPException(status_code=404, detail="Order not found")
     if order.master_id != current_master.id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    if order.status != schemas.order.OrderStatus.init.value:
+    if order.status != schemas.order.OrderStatus.checked.value:
         raise HTTPException(status_code=400, detail="Not need divination")
     order = crud.order.updateDivination(db=db, db_obj=order, obj_in=order_in)
     product = crud.product.get(db=db, id=order.product_id)
@@ -310,18 +305,18 @@ def read_order_by_id(
     )
 
 
-@router.delete("/{id}", response_model=schemas.Order)
-def delete_order(
-    *,
-    db: Session = Depends(deps.get_db),
-    id: int,
-    current_user: models.User = Depends(deps.get_current_active_superuser),
-) -> Any:
-    """
-    Delete an order.
-    """
-    order = crud.order.get(db=db, id=id)
-    if not order:
-        raise HTTPException(status_code=404, detail="Order not found")
-    order = crud.order.remove(db=db, id=id)
-    return order
+# @router.delete("/{id}", response_model=schemas.Order)
+# def delete_order(
+#     *,
+#     db: Session = Depends(deps.get_db),
+#     id: int,
+#     current_user: models.User = Depends(deps.get_current_active_superuser),
+# ) -> Any:
+#     """
+#     Delete an order.
+#     """
+#     order = crud.order.get(db=db, id=id)
+#     if not order:
+#         raise HTTPException(status_code=404, detail="Order not found")
+#     order = crud.order.remove(db=db, id=id)
+#     return order

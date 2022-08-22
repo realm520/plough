@@ -31,7 +31,7 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
         self, db: Session, *, db_obj: Order, obj_in: OrderUpdateDivination
     ) -> Order:
         db_obj.divination = obj_in.divination
-        db_obj.status = OrderStatus.checked.value
+        # db_obj.status = OrderStatus.checked.value
         db_obj.arrange_status = 1
         db.add(db_obj)
         db.commit()
@@ -49,24 +49,25 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
             orders = []
         return len(orders)
 
-    def get_multi_by_owner(
-        self, db: Session, *, owner_id: int, skip: int = 0, limit: int = 100
+    def get_multi_with_condition(
+        self, db: Session, *, 
+        role_id: int,
+        role: int = 0,
+        status: int = -1,
+        skip: int = 0, limit: int = 100
     ) -> List[Order]:
+        query = db.query(self.model)
+        conditions = []
+        if role == 1:
+            conditions.append(Order.owner_id==role_id)
+        elif role == 2:
+            conditions.append(Order.master_id==role_id)
+        if status >= 0:
+            conditions.append(Order.status==status)
+        query = query.filter(*conditions)
         return (
-            db.query(self.model)
-            .filter(Order.owner_id == owner_id)
-            .order_by(Order.id.desc())
-            .offset(skip)
-            .limit(limit)
-            .all()
-        )
-
-    def get_multi_by_master(
-        self, db: Session, *, master_id: int, skip: int = 0, limit: int = 100
-    ) -> List[Order]:
-        return (
-            db.query(self.model)
-            .filter(Order.master_id == master_id, Order.status!=0)
+            query.count(),
+            query
             .order_by(Order.id.desc())
             .offset(skip)
             .limit(limit)

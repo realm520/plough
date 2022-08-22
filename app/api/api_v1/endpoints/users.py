@@ -15,7 +15,7 @@ from app.bazi import BaZi
 router = APIRouter()
 
 
-@router.get("/list", response_model=List[schemas.UserSummary])
+@router.get("/list")
 def read_users(
     db: Session = Depends(deps.get_db),
     skip: int = 0,
@@ -25,9 +25,11 @@ def read_users(
     """
     Retrieve users.
     """
-    users = crud.user.get_user_summary(db, skip=skip, limit=limit)
-    return users
-
+    total, users = crud.user.get_user_summary(db, skip=skip, limit=limit)
+    return {
+        "total": total,
+        "users": users
+    }
 
 @router.post("/", response_model=schemas.User)
 def create_user(

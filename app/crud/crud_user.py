@@ -20,11 +20,13 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
     def get_user_summary(
         self, db: Session, *, skip: int = 0, limit: int = 100
     ) -> List[UserSummary]:
-        users = db.query(func.count(Order.id), func.sum(Order.amount), User.phone, User.create_time, User.id) \
+        query = db.query(func.count(Order.id), func.sum(Order.amount), User.phone, User.create_time, User.id) \
             .join(Order, Order.owner_id==User.id, isouter=True) \
             .filter(User.is_superuser==False) \
-            .group_by(User.phone, User.create_time, User.id).offset(skip).limit(limit).all()
+            .group_by(User.phone, User.create_time, User.id)
         ret_obj = []
+        total = query.count()
+        users = query.offset(skip).limit(limit).all()
         for i in users:
             ret_obj.append(UserSummary(
                 id=i.id,
@@ -33,7 +35,7 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
                 order_count=i[0],
                 order_amount=i[1] if i[1] else 0
             ))
-        return ret_obj
+        return (total, ret_obj)
 
     # def get_multi_admin(
     #     self, db: Session, *, skip: int = 0, limit: int = 100
