@@ -1,4 +1,4 @@
-from typing import Any
+from typing import Any, List
 
 from fastapi import APIRouter, Depends
 from pydantic.networks import EmailStr
@@ -44,6 +44,19 @@ def get_latest_version(
     """
     version = crud.version.get_by_product(db=db, product=product)
     return version
+
+@router.post("/retrieve-version/", response_model=List[schemas.Version])
+def release_version(
+    skip: int = 0,
+    limit: int = 100,
+    db: Session = Depends(deps.get_db),
+    current_user: models.User = Depends(deps.get_current_active_superuser),
+) -> Any:
+    """
+    Retrieve version.
+    """
+    versions = crud.version.get_multi(db=db, skip=skip, limit=limit)
+    return versions
 
 @router.post("/release-version/", response_model=schemas.Version)
 def release_version(

@@ -58,6 +58,7 @@ class OrderInDBBase(OrderCreate):
 # Properties to return to client
 class Order(OrderInDBBase):
     master: Optional[str] = None
+    master_avatar: Optional[str] = None
     owner: Optional[str] = None
     product: Optional[str] = None
 

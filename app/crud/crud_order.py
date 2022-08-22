@@ -38,6 +38,17 @@ class CRUDOrder(CRUDBase[Order, OrderCreate, OrderUpdate]):
         db.refresh(db_obj)
         return db_obj
 
+    def get_summary(self, db: Session, role: int, role_id: int):
+        if role == 0: #superuser
+            orders = db.query(Order).all()
+        elif role == 1: #user
+            orders = db.query(Order).filter(Order.owner_id==role_id).all()
+        elif role == 2: #master
+            orders = db.query(Order).filter(Order.master_id==role_id).all()
+        else:
+            orders = []
+        return len(orders)
+
     def get_multi_by_owner(
         self, db: Session, *, owner_id: int, skip: int = 0, limit: int = 100
     ) -> List[Order]:

@@ -14,7 +14,7 @@ from app.core.settings.app import AppSettings
 
 router = APIRouter()
 
-logging.basicConfig(filename='demo.log', level=logging.DEBUG, filemode='a', format='%(asctime)s - %(process)s - %(levelname)s: %(message)s')
+logging.basicConfig(level=logging.DEBUG, format='%(asctime)s - %(process)s - %(levelname)s: %(message)s')
 settings: AppSettings = get_app_settings()
 with open(settings.PRIVATE_KEY, "r") as f:
     pkey = f.read()

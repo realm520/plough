@@ -72,6 +72,24 @@ def create_master(
     return master
 
 
+@router.get("/divination", response_model=Any)
+def master_get_divination(
+    *,
+    db: Session = Depends(deps.get_db),
+    year: int,
+    month: int,
+    day: int,
+    hour: int,
+    sex: int,
+    current_master: models.Master = Depends(deps.get_current_active_master)
+) -> Any:
+    """
+    Get divination.
+    """
+    bazi = BaZi(year, month, day, hour, sex)
+    return bazi.get_detail()
+
+
 @router.put("/me", response_model=schemas.Master)
 def update_master_me(
     *,
@@ -144,21 +162,6 @@ def create_master_open(
     master = crud.master.register(db, obj_in=data_in)
     return master
 
-@router.get("/divination", response_model=Any)
-def get_divination(
-    *,
-    db: Session = Depends(deps.get_db),
-    year: int,
-    month: int,
-    day: int,
-    hour: int,
-    current_user: models.User = Depends(deps.get_current_active_user)
-) -> Any:
-    """
-    Get divination.
-    """
-    bazi = BaZi(year, month, day, hour)
-    return bazi.get_detail()
 
 @router.get("/{master_id}", response_model=schemas.Master)
 def read_master_by_id(

@@ -6,6 +6,7 @@ from string import ascii_letters, digits
 from typing import Any, List
 
 from fastapi import APIRouter, Depends, HTTPException
+from fastapi import BackgroundTasks
 from sqlalchemy.orm import Session
 from wechatpayv3 import WeChatPay, WeChatPayType
 
@@ -18,17 +19,21 @@ router = APIRouter()
 
 
 
-@router.get("/summary", response_model=List[schemas.Order])
-def read_orders(
+@router.get("/summary")
+def read_orders_summary(
     db: Session = Depends(deps.get_db),
-    skip: int = 0,
-    limit: int = 100,
     current_user: models.User = Depends(deps.get_current_active_user),
 ) -> Any:
     """
-    Retrieve orders (User & SuperUser).
+    Retrieve orders summary(User & SuperUser).
     """
-
+    if crud.user.is_superuser(current_user):
+        orders = crud.order.get_summary(db, 0, 0)
+    else:
+        orders = crud.order.get_summary(db, 0, current_user.id)
+    return {
+        "total": orders
+    }
 
 @router.get("/", response_model=List[schemas.Order])
 def read_orders(
@@ -71,6 +76,7 @@ def read_orders(
             arrange_status=o.arrange_status,
             status=o.status,
             master=o.master.name,
+            master_avatar=o.master.avatar,
             owner=o.owner.user_name
         ))
     return ret_obj
@@ -114,13 +120,30 @@ def read_orders_master(
             arrange_status=o.arrange_status,
             status=o.status,
             master=o.master.name,
+            master_avatar=o.master.avatar,
             owner=o.owner.user_name
         ))
     return ret_obj
 
+def update_order_status(db, wxpay, order_id, out_trade_no, mchid):
+    for i in range(12):
+        ret = wxpay.query(out_trade_no=out_trade_no, mchid=mchid)
+        ret_json = json.loads(ret[1])
+        print(ret_json["trade_state"])
+        if ret_json["trade_state"] != "NOTPAY":
+            order = crud.order.get(db=db, id=order_id)
+            if order:
+                order.status = 1
+                db.add(order),
+                db.commit()
+                db.refresh(order)
+            break
+        time.sleep(5)
+
 @router.post("/")
 def create_order(
     *,
+    task: BackgroundTasks,
     db: Session = Depends(deps.get_db),
     order_in: schemas.OrderCreate,
     current_user: models.User = Depends(deps.get_current_active_user),
@@ -164,6 +187,7 @@ def create_order(
         noncestr = ''.join(sample(ascii_letters + digits, 8))
         package = 'Sign=WXPay'
         paysign = wxpay.sign([settings.APPID, str(timestamp), noncestr, prepay_id])
+        task.add_task(update_order_status, db, wxpay, order.id, order.order_number, settings.MCHID)
         return {'code': 0, 'result': {
             'ordernumber': order.order_number,
             'appid': settings.APPID,
@@ -216,10 +240,31 @@ def master_update_order(
         raise HTTPException(status_code=404, detail="Order not found")
     if order.master_id != current_master.id:
         raise HTTPException(status_code=400, detail="Not enough permissions")
-    if order.status != schemes.order.OrderStatus.init:
+    if order.status != schemas.order.OrderStatus.init.value:
         raise HTTPException(status_code=400, detail="Not need divination")
     order = crud.order.updateDivination(db=db, db_obj=order, obj_in=order_in)
-    return order
+    product = crud.product.get(db=db, id=order.product_id)
+    return schemas.Order(
+        id=order.id,
+        product_id=order.product_id,
+        product=product.name,
+        order_number=order.order_number,
+        name=order.name,
+        sex=order.sex,
+        birthday=order.birthday,
+        location=order.location,
+        amount=order.amount,
+        owner_id=order.owner_id,
+        master_id=order.master_id,
+        divination=order.divination,
+        create_time=str(order.create_time),
+        pay_time=str(order.pay_time),
+        status=order.status,
+        arrange_status=order.arrange_status,
+        master=order.master.name,
+        master_avatar=order.master.avatar,
+        owner=order.owner.user_name
+    )
 
 
 @router.get("/{id}", response_model=schemas.Order)
@@ -260,6 +305,7 @@ def read_order_by_id(
         status=order.status,
         arrange_status=order.arrange_status,
         master=order.master.name,
+        master_avatar=order.master.avatar,
         owner=order.owner.user_name
     )
 
