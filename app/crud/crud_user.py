@@ -1,5 +1,6 @@
 import time
 import uuid
+import random
 from typing import Any, Dict, Optional, Union, List
 
 from sqlalchemy.orm import Session
@@ -37,11 +38,6 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             ))
         return (total, ret_obj)
 
-    # def get_multi_admin(
-    #     self, db: Session, *, skip: int = 0, limit: int = 100
-    # ) -> List[User]:
-    #     return db.query(User).filter(User.is_superuser=False).offset(skip).limit(limit).all()
-
     def get_by_phone(self, db: Session, *, phone: str) -> Optional[User]:
         return db.query(User).filter(User.phone == phone).first()
 
@@ -63,8 +59,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             return None
 
     def create_superuser(self, db: Session, *, obj_in: UserCreate) -> User:
+        rand_password = ''.join(random.sample('1234567890abcdefghijklmnopqrstufwxyz', 8))
         db_obj = User(
-            hashed_password=get_password_hash("12345678"),
+            hashed_password=get_password_hash(rand_password),
             user_name=str(uuid.uuid4()),
             full_name="",
             is_superuser=True,
@@ -77,8 +74,9 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
         return db_obj
 
     def create(self, db: Session, *, obj_in: UserCreate) -> User:
+        rand_password = ''.join(random.sample('1234567890abcdefghijklmnopqrstufwxyz', 8))
         db_obj = User(
-            hashed_password=get_password_hash("12345678"),
+            hashed_password=get_password_hash(rand_password),
             user_name=str(uuid.uuid4()),
             is_superuser=False,
             phone=obj_in.phone
