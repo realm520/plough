@@ -27,11 +27,13 @@ def read_masters(
     masters = crud.master.get_multi(db, skip=skip, limit=limit)
     ret_obj = []
     for m in masters:
-        ret_obj.append(schemas.MasterForOrder(
-            name=m.name,
-            id=m.id,
-            price=m.price
-        ))
+        if m.status == 1:
+            ret_obj.append(schemas.MasterForOrder(
+                name=m.name,
+                desc=m.desc,
+                id=m.id,
+                price=m.price
+            ))
     return ret_obj
 
 @router.get("/list", response_model=schemas.MasterQuery)

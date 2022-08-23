@@ -22,6 +22,7 @@ class MasterCreate(MasterBase):
 
 class MasterForOrder(BaseModel):
     name: Optional[str] = None
+    desc: Optional[str] = None
     id: Optional[int] = None
     price: Optional[int] = None
 
