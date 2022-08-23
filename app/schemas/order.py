@@ -47,6 +47,7 @@ class OrderInDBBase(OrderCreate):
     birthday: Optional[str] = None
     location: Optional[str] = None
     amount: Optional[int] = None
+    shareRate: Optional[int] = None
     divination: Optional[str] = None
     reason: Optional[str] = None
     create_time: Optional[str] = None
